@@ -15,7 +15,7 @@ import {
 
 import { generateId, ToolUIPart } from "ai";
 import { sql } from "drizzle-orm";
-import { GenerateImageInput, GenerateImageOutput } from "@/tools/tools";
+import { GenerateImageInput, GenerateImageOutput, UpdateImageInput, UpdateImageOutput } from "@/tools/tools";
 import { MyProviderMetadata, MyUIMessage } from "@/lib/chat";
 
 
@@ -163,8 +163,8 @@ export const messageParts = pgTable(
     tool_generateImage_Input: jsonb().$type<GenerateImageInput>(),
     tool_generateImage_output: jsonb().$type<GenerateImageOutput>(),
 
-    tool_updateImage_Input: jsonb().$type<GenerateImageInput>(),
-    tool_updateImage_output: jsonb().$type<GenerateImageOutput>(),
+    tool_updateImage_Input: jsonb().$type<UpdateImageInput>(),
+    tool_updateImage_output: jsonb().$type<UpdateImageOutput>(),
 
 
     // metadata
