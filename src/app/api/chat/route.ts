@@ -1,30 +1,40 @@
-import { streamText, UIMessage, convertToModelMessages, tool, createIdGenerator, generateId, FileUIPart } from "ai";
+import { streamText, convertToModelMessages, createIdGenerator, generateId, FileUIPart } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
-import { z } from "zod";
-import Replicate from "replicate";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { createChat, MyUIMessage, saveMessage } from "@/lib/chat";
+import { tools } from "@/tools/tools";
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+
+
   const {
     messages,
     model,
     webSearch,
     files
   }: {
-    messages: UIMessage[];
+    messages: MyUIMessage[];
     model: string;
     webSearch: boolean;
     files:FileUIPart[]
   } = await req.json();
 
+      const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
+    if (!session) {
+      return Response.json(
+        { error: "unAuthorized" },
+        { status: 401, statusText: "unAuthorized" }
+      );
+    }
   
 
   const result = streamText({
@@ -89,35 +99,14 @@ You can:
 - Always try to leave the user with a **useful next step** or recommendation.
 
 You are now active and ready to assist.`,
-    tools: {
-      generate_Image: tool({
-        name: "generate_Image",
-        description: "tool that generates images",
-        inputSchema: z.object({
-          prompt: z.string().describe("the prompt of the user"),
-        }),
-        execute: async ({ prompt }) => {
-          const input = {
-            prompt: prompt,
-            output_format: "jpg",
-          };
-
-          const output:any = await replicate.run("google/nano-banana", { input });
-
-          // To access the file URL:
-          console.log("image output",output?.url());
-
-          return output?.url();
-        },
-      }),
-    },
+    tools:tools,
     onFinish: async ({content,toolResults,files,toolCalls}) =>{
       console.log("toolCalls",toolCalls);
       
       console.log("content",content);
       console.log("toolResult",toolResults);
       console.log("files",files);
-      
+
     },
    
   });
@@ -133,14 +122,18 @@ You are now active and ready to assist.`,
     originalMessages:messages,
     onFinish: async ({messages}) =>{
 
-      const files = messages
-  .flatMap(msg => 
-    msg.parts.filter(part => part.type === "file")
-  );
+      messages.map( async(msg) => {
+        // const chatId = Math.random().toString(36).substring(7);
 
-console.log(" messages:", messages);
+        const chatId = await createChat(session.user.id);
+        const message = msg.parts.filter(part => part.type !== "step-start")
 
-      
+        const messages = await saveMessage(msg,session.user.id,chatId)
+
+        console.log(messages);
+        
+      })
+    
     }
 
   });

@@ -30,7 +30,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Action, Actions } from "@/components/ai-elements/actions";
 import { Fragment, useState } from "react";
-import { useChat } from "@ai-sdk/react";
+import { UIMessage, useChat } from "@ai-sdk/react";
 import { Response } from "@/components/ai-elements/response";
 import { CopyIcon, File, GlobeIcon, RefreshCcwIcon } from "lucide-react";
 import {
@@ -60,11 +60,21 @@ const models = [
   },
 ];
 
-const Chat = () => {
+
+interface ChatProps {
+chatId:string,
+initialMessages?:UIMessage[]
+}
+
+const Chat = ({chatId,initialMessages}:ChatProps) => {
+
   const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(models[0].value);
   const [webSearch, setWebSearch] = useState(false);
-  const { messages, sendMessage, status, regenerate } = useChat();
+  const { messages, sendMessage, status, regenerate } = useChat({
+    id:chatId,
+    messages:initialMessages
+  });
 
   const attachments = usePromptInputAttachments();
 
@@ -201,7 +211,7 @@ const Chat = () => {
                           </Message>
                         </Fragment>
                       );
-                    case "tool-generate_Image":
+                    case "tool-generateImage":
                       const image = part.output as string;
                       console.log("part out put", image);
 
