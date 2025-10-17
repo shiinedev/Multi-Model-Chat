@@ -99,8 +99,7 @@ export const messages = pgTable(
   {
     id: varchar()
       .primaryKey()
-      .$defaultFn(() => generateId())
-      .references(() => user.id, { onDelete: "cascade" }),
+      .$defaultFn(() => generateId()),
     chatId: varchar("chat_id", { length: 64 })
       .references(() => chats.id, { onDelete: "cascade" })
       .notNull(),
@@ -210,7 +209,7 @@ export const messageParts = pgTable(
 );
 
 
-export const schema = { user, session, verification, account };
+export const schema = { user, session, verification, account,chats,messages,messageParts };
 
 
 export type MyDBUIMessagePart = typeof messageParts.$inferInsert;

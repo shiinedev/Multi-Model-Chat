@@ -5,7 +5,7 @@ import z from "zod";
 
 export const metadataSchema = z.object({});
 
-type MyMetadata = z.infer<typeof metadataSchema>;
+export type MyMetadata = z.infer<typeof metadataSchema>;
 
 
 

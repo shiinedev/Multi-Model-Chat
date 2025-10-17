@@ -1,10 +1,12 @@
-import { streamText, convertToModelMessages, createIdGenerator, generateId, FileUIPart } from "ai";
+import { streamText, convertToModelMessages, createIdGenerator, generateId, FileUIPart, validateUIMessages } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { createChat, MyUIMessage, saveMessage } from "@/lib/chat";
+import { createChat, MyUIMessage } from "@/lib/chat";
 import { tools } from "@/tools/tools";
+import { loadChat, saveMessage } from "@/lib/chat/messages";
+
 
 
 // Allow streaming responses up to 30 seconds
@@ -14,15 +16,17 @@ export async function POST(req: Request) {
 
 
   const {
-    messages,
+    message,
     model,
     webSearch,
-    files
+    files,
+    id:chatId
   }: {
-    messages: MyUIMessage[];
+    message: MyUIMessage;
     model: string;
     webSearch: boolean;
-    files:FileUIPart[]
+    files:FileUIPart[],
+    id:string
   } = await req.json();
 
       const session = await auth.api.getSession({
@@ -35,6 +39,11 @@ export async function POST(req: Request) {
         { status: 401, statusText: "unAuthorized" }
       );
     }
+
+    const previousMessages = await loadChat(chatId);
+
+  // validate messages if they contain tools, metadata, or data parts:
+  const messages = [...previousMessages,message]
   
 
   const result = streamText({
@@ -83,7 +92,7 @@ You can:
 ### 🧰 Tool Usage
 - Use the **code tool** for code execution, generation, and debugging.
 - Use the **file tool** to read and analyze user-uploaded documents.
-- Use the **image tool** for creating or editing images from prompts.
+- Use the **image tool** for generating or editing images from prompts.
 - When generating code, ensure it’s **complete, runnable, and commented** unless the user requests otherwise.
 - When using external data (via web search or documents), cite sources clearly.
 
@@ -100,15 +109,6 @@ You can:
 
 You are now active and ready to assist.`,
     tools:tools,
-    onFinish: async ({content,toolResults,files,toolCalls}) =>{
-      console.log("toolCalls",toolCalls);
-      
-      console.log("content",content);
-      console.log("toolResult",toolResults);
-      console.log("files",files);
-
-    },
-   
   });
 
   // send sources and reasoning back to the client
@@ -120,20 +120,15 @@ You are now active and ready to assist.`,
     sendSources: true,
     sendReasoning: true,
     originalMessages:messages,
-    onFinish: async ({messages}) =>{
+    onFinish: async ({responseMessage}) =>{
 
-      messages.map( async(msg) => {
-        // const chatId = Math.random().toString(36).substring(7);
+      console.log("response message",responseMessage);
 
-        const chatId = await createChat(session.user.id);
-        const message = msg.parts.filter(part => part.type !== "step-start")
-
-        const messages = await saveMessage(msg,session.user.id,chatId)
-
-        console.log(messages);
-        
+      await saveMessage({
+        chatId,
+        message:responseMessage
       })
-    
+      
     }
 
   });

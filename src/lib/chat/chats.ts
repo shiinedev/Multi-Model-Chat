@@ -1,67 +1,24 @@
 
-
+import { and, eq} from "drizzle-orm";
+import { chats } from "@/db/schema";
 import { db } from "@/db/drizzle";
-import { chat } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
 
 
-export async function getChatByUser(userId: string) {
-    const chats = await db.select()
-    .from(chat)
-    .where(eq(chat.userId,userId))
-    .orderBy(chat.updatedAt)
-    return chats
-}
+export const createChat = async (userId:string) => {
+  const [{ id }] = await db.insert(chats).values({userId}).returning();
+  return id;
+};
 
+export const getChatsByUserId = async (userId:string) => {
+  return await db.select().from(chats).where(eq(chats.userId,userId));
+};
 
-export async function createChat(userId:string, title?:string) {
+export const deleteChat = async (chatId: string,userId:string) => {
+  await db.delete(chats).where(and(eq(chats.id, chatId),eq(chats.userId,userId)));
+};
 
-    const chatId = nanoid();
-
-    await db.insert(chat).values({
-        id:chatId,
-        title:title || "new conversation",
-        userId,
-    })
-    
-    return chatId
-}
-
-
-
-export async function updateChatTitle(userId: string, chatId: string, title?: string) {
-  if (!title) return null;
-
-  const updated = await db
-    .update(chat)
-    .set({ title })
-    .where(
-      and(
-        eq(chat.id, chatId),
-        eq(chat.userId, userId)
-      )
-    )
-    .returning();
-
-  return updated[0] ?? null;
-}
-
-
-export async function getChatById(chatId:string,userId:string) {
-
-    const result = await db.select()
-    .from(chat)
-    .where(eq(chat.id,chatId))
-    
-
-    const chats = result[0]
-
-    if(!chat || chats.userId !== userId ){
-        return null
-    } 
-
-    return chat
-}
+export const updateChat = async (chatId: string,title:string) => {
+  await db.update(chats).set({title}).where(eq(chats.id,chatId));
+};
 
 

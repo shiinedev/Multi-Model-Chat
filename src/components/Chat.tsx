@@ -48,6 +48,7 @@ import { Loader } from "@/components/ai-elements/loader";
 import Image from "next/image";
 import { AiImage } from "./ai-elements/image";
 import { Skeleton } from "./ui/skeleton";
+import { DefaultChatTransport } from "ai";
 
 const models = [
   {
@@ -73,7 +74,14 @@ const Chat = ({chatId,initialMessages}:ChatProps) => {
   const [webSearch, setWebSearch] = useState(false);
   const { messages, sendMessage, status, regenerate } = useChat({
     id:chatId,
-    messages:initialMessages
+    messages:initialMessages,
+    transport:new DefaultChatTransport({
+      api:"/api/chat",
+      prepareSendMessagesRequest({ messages, id }) {
+      return { body: { message: messages[messages.length - 1], id } };
+    },
+
+    })
   });
 
   const attachments = usePromptInputAttachments();

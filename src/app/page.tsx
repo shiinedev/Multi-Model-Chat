@@ -1,7 +1,8 @@
 import { PromptInputProvider } from "@/components/ai-elements/prompt-input";
 import Chat from "@/components/Chat";
 import { auth } from "@/lib/auth";
-import { createChat, loadChatMessages } from "@/lib/chat";
+import { createChat, MyUIMessage } from "@/lib/chat";
+import { loadChat } from "@/lib/chat/messages";
 import { UIMessage } from "ai";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -18,7 +19,7 @@ export default async function Home() {
 
   const chatId = await createChat(session?.user.id);
 
-  const messages:UIMessage[] = await loadChatMessages(chatId,session.user.id);
+  const messages:MyUIMessage[] = await loadChat(chatId);
 
 
   return (

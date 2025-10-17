@@ -1,4 +1,4 @@
-import { tool, type Tool, type InferToolInput, type InferToolOutput } from "ai";
+import { Tool, tool, type InferToolInput, type InferToolOutput } from "ai";
 import { z } from "zod";
 import Replicate from "replicate";
 
@@ -43,4 +43,4 @@ export type UpdateImageOutput = InferToolOutput<typeof updateImage>;
 export const tools = {
   generateImage,
   updateImage
-};
+} 
