@@ -1,55 +1,81 @@
-import { streamText, convertToModelMessages, createIdGenerator, generateId, FileUIPart, validateUIMessages } from "ai";
+import {
+  streamText,
+  convertToModelMessages,
+  createIdGenerator,
+  FileUIPart,
+  safeValidateUIMessages,
+  stepCountIs,
+} from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { createChat, MyUIMessage } from "@/lib/chat";
+import { MyUIMessage } from "@/lib/chat";
 import { tools } from "@/tools/tools";
 import { loadChat, saveMessage } from "@/lib/chat/messages";
-
-
+import { generateTitleForChat } from "./generateTitle";
+import { NextResponse } from "next/server";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-
-
   const {
     message,
     model,
     webSearch,
-    files,
-    id:chatId
+    id:chatId,
   }: {
     message: MyUIMessage;
     model: string;
     webSearch: boolean;
-    files:FileUIPart[],
-    id:string
+    id: string;
   } = await req.json();
 
-      const session = await auth.api.getSession({
-      headers: await headers(),
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  console.log("chatId",chatId);
+  
+  if (!session) {
+    return Response.json(
+      { error: "unAuthorized" },
+      { status: 401, statusText: "unAuthorized" }
+    );
+  }
+
+  if (message && chatId) {
+    await saveMessage({
+      chatId,
+      message: message,
     });
+  }else{
+    return NextResponse.json({error:"chatId and message are required"})
+  }
 
-    if (!session) {
-      return Response.json(
-        { error: "unAuthorized" },
-        { status: 401, statusText: "unAuthorized" }
-      );
-    }
+  const previousMessages = await loadChat(chatId);
 
-    const previousMessages = await loadChat(chatId);
+
+  const messages = [...previousMessages, message];
 
   // validate messages if they contain tools, metadata, or data parts:
-  const messages = [...previousMessages,message]
+  const validatedResult = await safeValidateUIMessages<MyUIMessage>({
+    messages,
+    tools,
+  });
+
+
+  if(!validatedResult.success){
+    return NextResponse.json({error:validatedResult.error.message || "message is not you message"});
+  }
+
   
 
   const result = streamText({
     model: google("gemini-2.5-flash"),
-    messages: convertToModelMessages(messages),
-    system: `You are shiinedev, a large multimodal language model built to assist with a wide range of tasks.
+    messages: convertToModelMessages(validatedResult.data),
+    system: `You are a NextGpt, a large multimodal language model built to assist with a wide range of tasks.
 
 ### 🧩 Core Identity
 - You are a helpful, knowledgeable, and creative AI assistant.
@@ -108,28 +134,30 @@ You can:
 - Always try to leave the user with a **useful next step** or recommendation.
 
 You are now active and ready to assist.`,
-    tools:tools,
+    tools: tools,
+    stopWhen:stepCountIs(5)
   });
 
   // send sources and reasoning back to the client
   return result.toUIMessageStreamResponse({
-    generateMessageId:createIdGenerator({
-      prefix:"msg_",
-      size:16
+    generateMessageId: createIdGenerator({
+      prefix: "msg_",
+      size: 16,
     }),
     sendSources: true,
     sendReasoning: true,
-    originalMessages:messages,
-    onFinish: async ({responseMessage}) =>{
+    originalMessages: messages,
+    onFinish: async ({ responseMessage }) => {
+      console.log("response message", responseMessage);
 
-      console.log("response message",responseMessage);
+      const title = await generateTitleForChat(messages);
+
+      console.log("title", title);
 
       await saveMessage({
         chatId,
-        message:responseMessage
-      })
-      
-    }
-
+        message: responseMessage,
+      });
+    },
   });
 }

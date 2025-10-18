@@ -1,11 +1,11 @@
-
+"use server"
 import { and, eq} from "drizzle-orm";
 import { chats } from "@/db/schema";
 import { db } from "@/db/drizzle";
 
 
-export const createChat = async (userId:string) => {
-  const [{ id }] = await db.insert(chats).values({userId}).returning();
+export const createChat = async (userId:string,title?:string) => {
+  const [{ id }] = await db.insert(chats).values({userId,title:title || "new message"}).returning();
   return id;
 };
 

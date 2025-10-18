@@ -7,8 +7,6 @@ export const metadataSchema = z.object({});
 
 export type MyMetadata = z.infer<typeof metadataSchema>;
 
-
-
 export type MyToolSet = InferUITools<typeof tools>;
 
 export type MyUIMessage = UIMessage<MyMetadata, never, MyToolSet>;

@@ -2,23 +2,38 @@ import { PromptInputProvider } from "@/components/ai-elements/prompt-input";
 import { AppSidebar } from "@/components/app-sedibar";
 import Chat from "@/components/Chat";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SiteHeader } from "@/components/ui/site-header";
 import { auth } from "@/lib/auth";
 import { getChatsByUserId } from "@/lib/chat";
+import { loadChat } from "@/lib/chat/messages";
+import { UIMessage } from "ai";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import React from "react";
 
-export default async function Home() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+interface chatProps {
+  params: Promise<{ id: string }>;
+}
 
-  if (!session) {
+const ChatPage = async ({ params }: chatProps) => {
+  const { id } = await params;
+
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user) {
     redirect("/login");
   }
 
-  // const chatId = await createChat(session?.user.id);
-
   const chats = await getChatsByUserId(session.user.id);
+  if (!chats) {
+    redirect("/");
+  }
+
+  const messages: UIMessage[] = await loadChat(id);
+
+  console.log("chat messages",messages);
+  
+   
 
   return (
     <SidebarProvider
@@ -30,15 +45,16 @@ export default async function Home() {
       }>
       <AppSidebar chats={chats} />
       <SidebarInset>
-       
-        <div className="flex flex-col h-screen">
-          <div className="flex flex-1 flex-col gap-2">
+        <div className="flex flex-1 flex-col h-screen">
+          <div className="@container/main flex flex-1 flex-col gap-2">
             <PromptInputProvider>
-              <Chat userId={session.user.id}/>
+              <Chat userId={session.user.id} chatId={id} initialMessages={messages} />
             </PromptInputProvider>
           </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};
+
+export default ChatPage;
