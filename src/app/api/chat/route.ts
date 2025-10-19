@@ -81,9 +81,10 @@ export async function POST(req: Request) {
           session.user.id,
           "Generating title...",
         );
-        
-        const message = await saveMessage({chatId, message:lastMessage});
         chat = newChat;
+
+        await saveMessage({chatId, message:lastMessage});
+
         generateTitlePromise = generateTitleForChat(messages)
           .then((title) => {
             return updateChat(chatId, title);

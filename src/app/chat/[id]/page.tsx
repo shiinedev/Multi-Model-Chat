@@ -42,7 +42,7 @@ const ChatPage = async ({ params }: chatProps) => {
           "--header-height": "calc(var(--spacing) * 12)",
         } as React.CSSProperties
       }>
-      <AppSidebar chats={chats} />
+      <AppSidebar chatId={id} chats={chats} />
       <SidebarInset>
         <div className="h-screen flex flex-col w-full">
           <SiteHeader />

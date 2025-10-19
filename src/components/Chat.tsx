@@ -46,11 +46,7 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { Loader } from "@/components/ai-elements/loader";
 import Image from "next/image";
-import { Skeleton } from "./ui/skeleton";
-import { DefaultChatTransport } from "ai";
-import { createChat, MyUIMessage } from "@/lib/chat";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SiteHeader } from "./ui/site-header";
 import { useFocusWhenNoChatIdPresent } from "@/lib/useFocus";
 
 const models = [
@@ -219,51 +215,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
                         </Message>
                       </Fragment>
                     );
-                  case "tool-generateImage":
-                    const image = part.output as string;
-                    console.log("part out put", image);
-
-                    return (
-                      <Fragment key={`${message.id}-${i}`}>
-                        <Message from={message.role}>
-                          {part.state === "input-available" && (
-                            <Skeleton className="h-50 w-50" />
-                          )}
-                          {part.state === "output-available" && (
-                            <Image
-                              src={image}
-                              alt={`generated_image-${i}`}
-                              width={200}
-                              height={200}
-                              className="rounded-md"
-                            />
-                          )}
-                        </Message>
-                      </Fragment>
-                    );
-                  case "tool-updateImage":
-                    const res = part.output as string;
-                    console.log("part out put", res);
-
-                    return (
-                      <Fragment key={`${message.id}-${i}`}>
-                        <Message from={message.role}>
-                          {part.state === "input-available" && (
-                            <Skeleton className="h-50 w-50" />
-                          )}
-                          {part.state === "output-available" && (
-                            <Image
-                              src={res}
-                              alt={`generated_image-${i}`}
-                              width={200}
-                              height={200}
-                              className="rounded-md"
-                            />
-                          )}
-                        </Message>
-                      </Fragment>
-                    );
-
+                 
                   case "reasoning":
                     return (
                       <Reasoning

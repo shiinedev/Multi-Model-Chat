@@ -19,14 +19,18 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState } from "react";
 import {chats} from "@/db/schema"
+import { usePathname } from "next/navigation";
 
 interface ChatProps{
   chats:typeof chats.$inferSelect[]
+  chatId:string
 }
 
-export function AppSidebar({chats}:ChatProps) {
+export function AppSidebar({chats,chatId}:ChatProps) {
 
-   const [searchQuery, setSearchQuery] = useState("")
+   const [searchQuery, setSearchQuery] = useState("");
+
+   const pathname = usePathname();
 
 
 
@@ -84,7 +88,7 @@ export function AppSidebar({chats}:ChatProps) {
              {filteredChats.length > 0 ? (
                 filteredChats.map((chat) => (
                   <SidebarMenuItem key={chat.id}>
-                    <SidebarMenuButton asChild className="group relative h-auto py-2.5 hover:bg-sidebar-accent">
+                    <SidebarMenuButton isActive={pathname === chatId}  asChild className="group relative h-auto py-2.5 hover:bg-sidebar-accent">
                       <Link href={`/?chatId=${chat.id}`} className="flex items-start gap-3">
                         <MessageSquare className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-sidebar-accent-foreground" />
                         <span className="line-clamp-2 flex-1 text-sm text-sidebar-foreground group-hover:text-sidebar-accent-foreground">

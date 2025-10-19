@@ -42,7 +42,7 @@ export default async function Home(props: {
           "--header-height": "calc(var(--spacing) * 12)",
         } as React.CSSProperties
       }>
-      <AppSidebar chats={chats} />
+      <AppSidebar chats={chats} chatId={chatIdFromSearchParams} />
       <SidebarInset>
         <div className="h-screen flex flex-col w-full">
           <SiteHeader title={chat?.title ?? ""} />
