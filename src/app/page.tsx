@@ -1,4 +1,3 @@
-import { PromptInputProvider } from "@/components/ai-elements/prompt-input";
 import { AppSidebar } from "@/components/app-sedibar";
 import Chat from "@/components/Chat";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";

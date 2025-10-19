@@ -52,9 +52,8 @@ export const loadChatMessage = async (chatId: string): Promise<MyUIMessage[]> =>
     orderBy: (messages, { asc }) => [asc(messages.createdAt)],
   });
 
-  console.log("load chats result");
+  console.log("load chats result",result);
   
-
   return result.map((message) => ({
     id: message.id,
     role: message.role,

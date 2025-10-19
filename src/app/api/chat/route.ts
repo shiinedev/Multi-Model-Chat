@@ -17,7 +17,6 @@ import { saveMessage } from "@/lib/chat/messages";
 import { generateTitleForChat } from "./generateTitle";
 import { NextResponse } from "next/server";
 
-
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
     webSearch,
     id: chatId,
   }: {
-    messages: UIMessage [];
+    messages: UIMessage[];
     model: string;
     webSearch: boolean;
     id: string;
@@ -44,7 +43,6 @@ export async function POST(req: Request) {
       { status: 401, statusText: "unAuthorized" }
     );
   }
-
 
   // validate messages if they contain tools, metadata, or data parts:
   const validatedResult = await safeValidateUIMessages<MyUIMessage>({
@@ -71,7 +69,7 @@ export async function POST(req: Request) {
     });
   }
 
-   const stream = createUIMessageStream<MyUIMessage>({
+  const stream = createUIMessageStream<MyUIMessage>({
     execute: async ({ writer }) => {
       let generateTitlePromise: Promise<void> | undefined = undefined;
 
@@ -79,31 +77,39 @@ export async function POST(req: Request) {
         const newChat = await createChat(
           chatId,
           session.user.id,
-          "Generating title...",
+          "Generating title..."
         );
         chat = newChat;
 
-        await saveMessage({chatId, message:lastMessage});
+       await saveMessage({ chatId, message: lastMessage });
 
+        writer.write({
+          type: "data-frontend-action",
+          data: "refresh-sidebar",
+          transient: true,
+        });
+      
         generateTitlePromise = generateTitleForChat(messages)
           .then((title) => {
             return updateChat(chatId, title);
-          }).then(() => {
+          })
+          .then(() => {
             writer.write({
               type: "data-frontend-action",
               data: "refresh-sidebar",
               transient: true,
             });
           });
+
           
       } else {
-        await saveMessage({chatId, message:lastMessage});
+        await saveMessage({ chatId, message: lastMessage });
       }
 
       const result = streamText({
         model: google("gemini-2.0-flash"),
         messages: convertToModelMessages(messages),
-         system: `You are a NextGpt, a large multimodal language model built to assist with a wide range of tasks.
+        system: `You are a NextGpt, a large multimodal language model built to assist with a wide range of tasks.
 
 ### 🧩 Core Identity
 - You are a helpful, knowledgeable, and creative AI assistant.
@@ -162,8 +168,8 @@ You can:
 - Always try to leave the user with a **useful next step** or recommendation.
 
 You are now active and ready to assist.`,
-    tools: tools,
-    stopWhen: stepCountIs(5),
+        tools: tools,
+        stopWhen: stepCountIs(5),
       });
 
       writer.merge(
@@ -177,7 +183,7 @@ You are now active and ready to assist.`,
     },
     generateId: () => crypto.randomUUID(),
     onFinish: async ({ responseMessage }) => {
-      await saveMessage({chatId, message:responseMessage});
+      await saveMessage({ chatId, message: responseMessage });
     },
   });
 
@@ -185,6 +191,4 @@ You are now active and ready to assist.`,
   return createUIMessageStreamResponse({
     stream,
   });
-
 }
-

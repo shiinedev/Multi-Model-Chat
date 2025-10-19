@@ -25,8 +25,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
-  PromptInputTools,
-  usePromptInputAttachments,
+  PromptInputTools
 } from "@/components/ai-elements/prompt-input";
 import { Action, Actions } from "@/components/ai-elements/actions";
 import { Fragment, startTransition, useRef, useState } from "react";
@@ -48,6 +47,7 @@ import { Loader } from "@/components/ai-elements/loader";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFocusWhenNoChatIdPresent } from "@/lib/useFocus";
+import { MyUIMessage } from "@/lib/chat";
 
 const models = [
   {
@@ -61,7 +61,7 @@ const models = [
 ];
 
 interface ChatProps {
-  initialMessages?: UIMessage[];
+  initialMessages?: MyUIMessage[];
 }
 
 const Chat = ({ initialMessages }: ChatProps) => {
@@ -75,10 +75,12 @@ const Chat = ({ initialMessages }: ChatProps) => {
 
   const chatIdInUse = chatIdFromSearchParams || backupChatId;
 
-  const { messages, sendMessage, status, regenerate } = useChat({
+  const { messages, sendMessage, status, regenerate } = useChat<MyUIMessage>({
     id: chatIdInUse,
     messages: initialMessages,
     onData: (message) => {
+      console.log("ondata",message);
+      
       if (
         message.type === "data-frontend-action" &&
         message.data === "refresh-sidebar"
@@ -88,6 +90,9 @@ const Chat = ({ initialMessages }: ChatProps) => {
     },
     generateId: () => crypto.randomUUID(),
   });
+
+  console.log("messages",initialMessages);
+  
 
   const ref = useFocusWhenNoChatIdPresent(chatIdFromSearchParams);
 
@@ -256,6 +261,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
               onChange={(e) => setInput(e.target.value)}
               value={input}
               ref={ref}
+              autoFocus
             />
           </PromptInputBody>
           <PromptInputToolbar>
