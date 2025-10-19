@@ -21,16 +21,16 @@ export const saveMessage = async ({
 }) => {
  
 
- const [{id}] =  await db.insert(messages)
+ const [newMessage] =  await db.insert(messages)
       .values({
         chatId,
         role: message.role,
       }).returning();
 
-       const mappedDBUIParts = mapUIMessagePartsToDBParts(message.parts, id);
+       const mappedDBUIParts = mapUIMessagePartsToDBParts(message.parts, newMessage.id);
      
 
-    await db.delete(messageParts).where(eq(messageParts.messageId,id));
+    await db.delete(messageParts).where(eq(messageParts.messageId,newMessage.id));
 
     if (mappedDBUIParts.length > 0) {
 
@@ -38,10 +38,11 @@ export const saveMessage = async ({
       
       await db.insert(messageParts).values(mappedDBUIParts);
     }
-  
+    
+    return newMessage;
 };
 
-export const loadChat = async (chatId: string): Promise<MyUIMessage[]> => {
+export const loadChatMessage = async (chatId: string): Promise<MyUIMessage[]> => {
  
   const result = await db.query.messages.findMany({
     where: eq(messages.chatId, chatId),

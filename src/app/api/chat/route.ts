@@ -1,32 +1,34 @@
 import {
   streamText,
   convertToModelMessages,
-  createIdGenerator,
-  FileUIPart,
   safeValidateUIMessages,
   stepCountIs,
+  UIMessage,
+  createUIMessageStreamResponse,
+  createUIMessageStream,
 } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { MyUIMessage } from "@/lib/chat";
+import { createChat, getChatById, MyUIMessage, updateChat } from "@/lib/chat";
 import { tools } from "@/tools/tools";
-import { loadChat, saveMessage } from "@/lib/chat/messages";
+import { saveMessage } from "@/lib/chat/messages";
 import { generateTitleForChat } from "./generateTitle";
 import { NextResponse } from "next/server";
+
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const {
-    message,
+    messages,
     model,
     webSearch,
-    id:chatId,
+    id: chatId,
   }: {
-    message: MyUIMessage;
+    messages: UIMessage [];
     model: string;
     webSearch: boolean;
     id: string;
@@ -36,8 +38,6 @@ export async function POST(req: Request) {
     headers: await headers(),
   });
 
-  console.log("chatId",chatId);
-  
   if (!session) {
     return Response.json(
       { error: "unAuthorized" },
@@ -45,17 +45,6 @@ export async function POST(req: Request) {
     );
   }
 
-  if (message && chatId) {
-    await saveMessage({
-      chatId,
-      message,
-    });
-  }
-
-  const previousMessages = await loadChat(chatId);
-
-
-  const messages = [...previousMessages, message];
 
   // validate messages if they contain tools, metadata, or data parts:
   const validatedResult = await safeValidateUIMessages<MyUIMessage>({
@@ -63,17 +52,57 @@ export async function POST(req: Request) {
     tools,
   });
 
-
-  if(!validatedResult.success){
-    return NextResponse.json({error:validatedResult.error.message || "message is not you message"});
+  if (!validatedResult.success) {
+    return NextResponse.json({
+      error: validatedResult.error.message || "message is not valid",
+    });
   }
 
-  
+  let chat = await getChatById(chatId);
+  const lastMessage = validatedResult.data[validatedResult.data.length - 1];
 
-  const result = streamText({
-    model: google("gemini-2.5-flash"),
-    messages: convertToModelMessages(validatedResult.data),
-    system: `You are a NextGpt, a large multimodal language model built to assist with a wide range of tasks.
+  if (!lastMessage) {
+    return new Response("No messages provided", { status: 400 });
+  }
+
+  if (lastMessage.role !== "user") {
+    return new Response("Last message must be from the user", {
+      status: 400,
+    });
+  }
+
+   const stream = createUIMessageStream<MyUIMessage>({
+    execute: async ({ writer }) => {
+      let generateTitlePromise: Promise<void> | undefined = undefined;
+
+      if (!chat) {
+        const newChat = await createChat(
+          chatId,
+          session.user.id,
+          "Generating title...",
+        );
+        
+        const message = await saveMessage({chatId, message:lastMessage});
+        chat = newChat;
+        generateTitlePromise = generateTitleForChat(messages)
+          .then((title) => {
+            return updateChat(chatId, title);
+          }).then(() => {
+            writer.write({
+              type: "data-frontend-action",
+              data: "refresh-sidebar",
+              transient: true,
+            });
+          });
+          
+      } else {
+        await saveMessage({chatId, message:lastMessage});
+      }
+
+      const result = streamText({
+        model: google("gemini-2.0-flash"),
+        messages: convertToModelMessages(messages),
+         system: `You are a NextGpt, a large multimodal language model built to assist with a wide range of tasks.
 
 ### 🧩 Core Identity
 - You are a helpful, knowledgeable, and creative AI assistant.
@@ -133,29 +162,28 @@ You can:
 
 You are now active and ready to assist.`,
     tools: tools,
-    stopWhen:stepCountIs(5)
+    stopWhen: stepCountIs(5),
+      });
+
+      writer.merge(
+        result.toUIMessageStream({
+          sendSources: true,
+          sendReasoning: true,
+        })
+      );
+
+      await generateTitlePromise;
+    },
+    generateId: () => crypto.randomUUID(),
+    onFinish: async ({ responseMessage }) => {
+      await saveMessage({chatId, message:responseMessage});
+    },
   });
 
   // send sources and reasoning back to the client
-  return result.toUIMessageStreamResponse({
-    generateMessageId: createIdGenerator({
-      prefix: "msg_",
-      size: 16,
-    }),
-    sendSources: true,
-    sendReasoning: true,
-    originalMessages: messages,
-    onFinish: async ({ responseMessage }) => {
-      console.log("response message", responseMessage);
-
-      const title = await generateTitleForChat(messages);
-
-      console.log("title", title);
-
-      await saveMessage({
-        chatId,
-        message: responseMessage,
-      });
-    },
+  return createUIMessageStreamResponse({
+    stream,
   });
+
 }
+

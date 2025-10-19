@@ -4,11 +4,18 @@ import Chat from "@/components/Chat";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
 import { auth } from "@/lib/auth";
-import { getChatsByUserId } from "@/lib/chat";
+import { getChatById, getChatsByUserId, MyUIMessage } from "@/lib/chat";
+import { loadChatMessage } from "@/lib/chat/messages";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function Home() {
+export default async function Home(props: {
+  searchParams: Promise<{ chatId?: string }>;
+}) {
+
+   const searchParams = await props.searchParams;
+  const chatIdFromSearchParams = searchParams.chatId ?? "";
+
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -17,10 +24,16 @@ export default async function Home() {
     redirect("/login");
   }
 
-  // const chatId = await createChat(session?.user.id);
-
   const chats = await getChatsByUserId(session.user.id);
 
+   let messages: MyUIMessage[] = []
+
+  if(chatIdFromSearchParams){
+     messages = await loadChatMessage(chatIdFromSearchParams);
+  }
+
+  const chat = await getChatById(chatIdFromSearchParams);
+  
   return (
     <SidebarProvider
       style={
@@ -32,8 +45,8 @@ export default async function Home() {
       <AppSidebar chats={chats} />
       <SidebarInset>
         <div className="h-screen flex flex-col w-full">
-          <SiteHeader />
-          <Chat userId={session.user.id} />
+          <SiteHeader title={chat?.title ?? ""} />
+          <Chat initialMessages={messages} />
         </div>
       </SidebarInset>
     </SidebarProvider>

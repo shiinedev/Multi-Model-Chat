@@ -80,9 +80,8 @@ export const verification = pgTable("verification", {
 });
 
 export const chats = pgTable("chat", {
-  id: varchar()
-    .primaryKey()
-    .$defaultFn(() => generateId()),
+  id: varchar("id",{length:36})
+    .primaryKey(),
   title: text("title"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")

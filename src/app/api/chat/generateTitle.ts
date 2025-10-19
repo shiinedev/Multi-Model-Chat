@@ -1,4 +1,3 @@
-
 import { google } from "@ai-sdk/google";
 import { convertToModelMessages, generateText, UIMessage } from "ai";
 

@@ -95,6 +95,13 @@ export const mapUIMessagePartsToDBParts = (
           tool_updateImage_errorText:
             part.state === "output-error" ? part.errorText : undefined,
         };
+      case "data-frontend-action":
+        return{
+          messageId,
+            type:"data-frontend-action",
+            data: "refresh-sidebar",
+            transient: true,
+        }
       default:
         throw new Error(`Unsupported part type: ${part}`);
     }

@@ -4,9 +4,8 @@ import Chat from "@/components/Chat";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
 import { auth } from "@/lib/auth";
-import { getChatsByUserId } from "@/lib/chat";
-import { loadChat } from "@/lib/chat/messages";
-import { UIMessage } from "ai";
+import { getChatsByUserId, MyUIMessage } from "@/lib/chat";
+import { loadChatMessage } from "@/lib/chat/messages";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -29,7 +28,7 @@ const ChatPage = async ({ params }: chatProps) => {
     redirect("/");
   }
 
-  const messages: UIMessage[] = await loadChat(id);
+  const messages: MyUIMessage[] = await loadChatMessage(id);
 
   console.log("chat messages",messages);
   
@@ -47,7 +46,7 @@ const ChatPage = async ({ params }: chatProps) => {
       <SidebarInset>
         <div className="h-screen flex flex-col w-full">
           <SiteHeader />
-          <Chat userId={session.user.id} />
+          <Chat initialMessages={messages} />
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -41,7 +41,7 @@ export function AppSidebar({chats}:ChatProps) {
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-0 hover:bg-transparent">
               <Link href="/" className="flex items-center gap-3">
                 <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary">
-                  <Bot className="size-5 text-foreground" />
+                  <Bot className="size-5 text-white" />
                 </div>
                 <span className="text-lg font-semibold text-foreground ">ChatBot AI</span>
               </Link>
@@ -54,7 +54,7 @@ export function AppSidebar({chats}:ChatProps) {
         <div className="mb-4">
           <Button
             asChild
-            className="w-full text-foreground"
+            className="w-full text-white"
           >
             <Link href="/">
               <Plus className="size-4" />
@@ -85,7 +85,7 @@ export function AppSidebar({chats}:ChatProps) {
                 filteredChats.map((chat) => (
                   <SidebarMenuItem key={chat.id}>
                     <SidebarMenuButton asChild className="group relative h-auto py-2.5 hover:bg-sidebar-accent">
-                      <Link href={`/chat/${chat.id}`} className="flex items-start gap-3">
+                      <Link href={`/?chatId=${chat.id}`} className="flex items-start gap-3">
                         <MessageSquare className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-sidebar-accent-foreground" />
                         <span className="line-clamp-2 flex-1 text-sm text-sidebar-foreground group-hover:text-sidebar-accent-foreground">
                           {chat.title}
