@@ -36,7 +36,7 @@ const ChatPage = async ({ params }: chatProps) => {
    
 
   return (
-    <SidebarProvider
+     <SidebarProvider
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -45,12 +45,9 @@ const ChatPage = async ({ params }: chatProps) => {
       }>
       <AppSidebar chats={chats} />
       <SidebarInset>
-        <div className="flex flex-1 flex-col h-screen">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <PromptInputProvider>
-              <Chat userId={session.user.id} chatId={id} initialMessages={messages} />
-            </PromptInputProvider>
-          </div>
+        <div className="h-screen flex flex-col w-full">
+          <SiteHeader />
+          <Chat userId={session.user.id} />
         </div>
       </SidebarInset>
     </SidebarProvider>

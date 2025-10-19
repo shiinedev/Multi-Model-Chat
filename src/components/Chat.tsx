@@ -29,7 +29,7 @@ import {
   usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
 import { Action, Actions } from "@/components/ai-elements/actions";
-import { Fragment, startTransition, useState } from "react";
+import { Fragment, startTransition, useRef, useState } from "react";
 import { UIMessage, useChat } from "@ai-sdk/react";
 import { Response } from "@/components/ai-elements/response";
 import { CopyIcon, File, GlobeIcon, RefreshCcwIcon } from "lucide-react";
@@ -70,19 +70,17 @@ interface ChatProps {
 }
 
 const Chat = ({ chatId, initialMessages, userId }: ChatProps) => {
-  const [input, setInput] = useState("");
+ const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(models[0].value);
   const [webSearch, setWebSearch] = useState(false);
-  const [currentChatId, setCurrentChatId] =
-    useState<ChatProps["chatId"]>(chatId);
+  const [currentChatId, setCurrentChatId] = useState<string | undefined>(chatId);
   const router = useRouter();
+  const isCreatingChat = useRef(false);
 
   const { messages, sendMessage, status, regenerate } = useChat({
     id: chatId,
-    messages: initialMessages,
+    messages:initialMessages,
   });
-
-  console.log("chatId", chatId);
 
   const handleSubmit = async (message: PromptInputMessage) => {
     const hasText = Boolean(message.text);
@@ -92,62 +90,65 @@ const Chat = ({ chatId, initialMessages, userId }: ChatProps) => {
       return;
     }
 
-    // if (message.files && message.files?.length > 0) {
-    //   console.log("all attachments", message.files);
-
-    //   attachments.files.map((file) => {
-    //     if (file.mediaType.startsWith("image")) {
-    //       console.log("images", file);
-    //     } else {
-    //       console.log("pdf files", file);
-    //     }
-    //   });
-    // }
-
-    // sendMessage(
-    //   {
-    //     text: message.text || "Sent with attachments",
-    //     files: message.files,
-    //   },
-    //   {
-    //     body: {
-    //       model: model,
-    //       webSearch: webSearch,
-    //     },
-    //   }
-    // );
-
-    startTransition(async () => {
-      sendMessage(
-        {
-          text: message.text || "Sent with attachments",
-          files: message.files,
-        },
-        {
-          body: {
-            id: chatId,
-          },
-        }
-      );
-
-      setInput("");
-
-      if (!chatId) {
+    // If no chatId exists and we're not already creating one, create it first
+    if (!currentChatId && !isCreatingChat.current) {
+      isCreatingChat.current = true;
+      
+      try {
         const newChatId = await createChat(userId);
         setCurrentChatId(newChatId);
+        
+        // Wait a tiny bit for state to update, then redirect
+        await new Promise(resolve => setTimeout(resolve, 0));
         router.push(`/chat/${newChatId}`);
-        console.log("new chatId", newChatId);
+        
+        // Now send the message with the new chatId
+        startTransition(() => {
+          sendMessage(
+            {
+              text: message.text || "Sent with attachments",
+              files: message.files,
+            },
+            {
+              body: {
+                id: newChatId,
+                model,
+                webSearch,
+              },
+            }
+          );
+          setInput("");
+        });
+      } catch (error) {
+        console.error("Error creating chat:", error);
+      } finally {
+        isCreatingChat.current = false;
       }
-    });
+    } else {
+      // Chat already exists, just send the message
+      startTransition(() => {
+        sendMessage(
+          {
+            text: message.text || "Sent with attachments",
+            files: message.files,
+          },
+          {
+            body: {
+              id: chatId,
+              model,
+              webSearch,
+            },
+          }
+        );
+        setInput("");
+      });
+    }
   };
 
   return (
-    <div className="w-full">
-      <SiteHeader />
-      <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
-        <div className="flex flex-col h-full">
-          <Conversation className="h-full">
-            <ConversationContent>
+      <div className="relative flex-1 items-center flex flex-col min-h-0 w-full">
+          <Conversation className="w-full">
+            <ConversationContent className="max-w-4xl mx-auto w-full pb-40">
               {messages.map((message) => (
                 <div key={message.id}>
                   {message.role === "assistant" &&
@@ -308,7 +309,7 @@ const Chat = ({ chatId, initialMessages, userId }: ChatProps) => {
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
-
+            <div className="absolute bottom-0 flex items-center justify-center w-full pb-3 sm:px-6 px-5">
           <PromptInput
             onSubmit={handleSubmit}
             className="mt-4"
@@ -362,8 +363,7 @@ const Chat = ({ chatId, initialMessages, userId }: ChatProps) => {
             </PromptInputToolbar>
           </PromptInput>
         </div>
-      </div>
-    </div>
+        </div>
   );
 };
 

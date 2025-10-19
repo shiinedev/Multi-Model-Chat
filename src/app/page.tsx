@@ -2,6 +2,7 @@ import { PromptInputProvider } from "@/components/ai-elements/prompt-input";
 import { AppSidebar } from "@/components/app-sedibar";
 import Chat from "@/components/Chat";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SiteHeader } from "@/components/ui/site-header";
 import { auth } from "@/lib/auth";
 import { getChatsByUserId } from "@/lib/chat";
 import { headers } from "next/headers";
@@ -30,13 +31,9 @@ export default async function Home() {
       }>
       <AppSidebar chats={chats} />
       <SidebarInset>
-       
-        <div className="flex flex-col h-screen">
-          <div className="flex flex-1 flex-col gap-2">
-            <PromptInputProvider>
-              <Chat userId={session.user.id}/>
-            </PromptInputProvider>
-          </div>
+        <div className="h-screen flex flex-col w-full">
+          <SiteHeader />
+          <Chat userId={session.user.id} />
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -48,10 +48,8 @@ export async function POST(req: Request) {
   if (message && chatId) {
     await saveMessage({
       chatId,
-      message: message,
+      message,
     });
-  }else{
-    return NextResponse.json({error:"chatId and message are required"})
   }
 
   const previousMessages = await loadChat(chatId);
