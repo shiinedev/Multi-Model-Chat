@@ -25,10 +25,10 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
-  PromptInputTools
+  PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import { Action, Actions } from "@/components/ai-elements/actions";
-import { Fragment, startTransition, useRef, useState } from "react";
+import { Fragment, startTransition, useEffect, useRef, useState } from "react";
 import { UIMessage, useChat } from "@ai-sdk/react";
 import { Response } from "@/components/ai-elements/response";
 import { CopyIcon, File, GlobeIcon, RefreshCcwIcon } from "lucide-react";
@@ -48,6 +48,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFocusWhenNoChatIdPresent } from "@/lib/useFocus";
 import { MyUIMessage } from "@/lib/chat";
+import { Skeleton } from "./ui/skeleton";
 
 const models = [
   {
@@ -76,11 +77,11 @@ const Chat = ({ initialMessages }: ChatProps) => {
   const chatIdInUse = chatIdFromSearchParams || backupChatId;
 
   const { messages, sendMessage, status, regenerate } = useChat<MyUIMessage>({
-    id: chatIdInUse,
+    id: chatIdFromSearchParams ?? chatIdInUse,
     messages: initialMessages,
     onData: (message) => {
-      console.log("ondata",message);
-      
+      console.log("ondata", message);
+
       if (
         message.type === "data-frontend-action" &&
         message.data === "refresh-sidebar"
@@ -91,8 +92,12 @@ const Chat = ({ initialMessages }: ChatProps) => {
     generateId: () => crypto.randomUUID(),
   });
 
-  console.log("messages",initialMessages);
-  
+  console.log("backup id", backupChatId);
+  console.log("id with search params", chatIdInUse);
+
+  useEffect(() => {
+    setBackupChatId(crypto.randomUUID());
+  }, []);
 
   const ref = useFocusWhenNoChatIdPresent(chatIdFromSearchParams);
 
@@ -122,8 +127,9 @@ const Chat = ({ initialMessages }: ChatProps) => {
     });
 
     if (!chatIdFromSearchParams) {
-      router.push(`/?chatId=${chatIdInUse}`);
-      setBackupChatId(crypto.randomUUID());
+      // router.push(`/?chatId=${chatIdInUse}`);
+      window.history.replaceState({}, "", `/?chatId=${chatIdInUse}`);
+      setBackupChatId(chatIdInUse);
     }
   };
 
@@ -220,7 +226,70 @@ const Chat = ({ initialMessages }: ChatProps) => {
                         </Message>
                       </Fragment>
                     );
-                 
+                  case "tool-generateImage":
+                    const image = part.output as string;
+                    console.log("part out put", image);
+
+                    return (
+                      <Fragment key={`${message.id}-${i}`}>
+                        <Message from={message.role}>
+                          {part.state === "input-available" && (
+                            <Skeleton className="h-50 w-50" />
+                          )}
+                          {part.state === "output-available" && (
+                            <Image
+                              src={image}
+                              alt={`generated_image-${i}`}
+                              width={200}
+                              height={200}
+                              className="rounded-md"
+                            />
+                          )}
+                        </Message>
+                      </Fragment>
+                    );
+                  case "tool-updateImage":
+                    return (
+                      <Fragment key={`${message.id}-${i}`}>
+                        <Message from={message.role}>
+                          {part.state === "input-available" && (
+                            <Skeleton className="h-50 w-50" />
+                          )}
+                          {part.state === "output-available" && (
+                            <Image
+                              src={part.output}
+                              alt={`generated_image-${i}`}
+                              width={200}
+                              height={200}
+                              className="rounded-md"
+                            />
+                          )}
+                        </Message>
+                      </Fragment>
+                    );
+                  case "tool-updateImage":
+                    const res = part.output as string;
+                    console.log("part out put", res);
+
+                    return (
+                      <Fragment key={`${message.id}-${i}`}>
+                        <Message from={message.role}>
+                          {part.state === "input-available" && (
+                            <Skeleton className="h-50 w-50" />
+                          )}
+                          {part.state === "output-available" && (
+                            <Image
+                              src={res}
+                              alt={`generated_image-${i}`}
+                              width={200}
+                              height={200}
+                              className="rounded-md"
+                            />
+                          )}
+                        </Message>
+                      </Fragment>
+                    );
+
                   case "reasoning":
                     return (
                       <Reasoning
