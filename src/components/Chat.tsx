@@ -78,7 +78,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
 
   const { messages, sendMessage, status, regenerate } = useChat<MyUIMessage>({
     id: chatIdFromSearchParams ?? chatIdInUse,
-    messages: initialMessages,
+    messages: initialMessages || [],
     onData: (message) => {
       console.log("ondata", message);
 
@@ -122,15 +122,19 @@ const Chat = ({ initialMessages }: ChatProps) => {
             webSearch,
           },
         }
+        
       );
-      setInput("");
-    });
-
-    if (!chatIdFromSearchParams) {
+       setInput("");
+       
+       if (!chatIdFromSearchParams) {
       // router.push(`/?chatId=${chatIdInUse}`);
       window.history.replaceState({}, "", `/?chatId=${chatIdInUse}`);
-      setBackupChatId(chatIdInUse);
+      setBackupChatId(crypto.randomUUID());
     }
+     
+    });
+
+   
   };
 
   return (
