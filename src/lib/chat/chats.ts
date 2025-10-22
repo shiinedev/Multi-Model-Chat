@@ -1,5 +1,5 @@
 "use server"
-import { and, asc, desc, eq} from "drizzle-orm";
+import { and, desc, eq} from "drizzle-orm";
 import { chats } from "@/db/schema";
 import { db } from "@/db/drizzle";
 

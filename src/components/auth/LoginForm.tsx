@@ -24,6 +24,7 @@ import { signIn } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const LoginSchema = z.object({
   email: z.email({ message: "Invalid email address" }),
@@ -51,12 +52,14 @@ export function LoginForm({
       password: data.password,
       fetchOptions: {
         onSuccess: () => {
-          console.log("Login successful");
+         toast.success("logged in successfully")
           redirect("/");
+          reset();
           // You can redirect the user or perform other actions here
         },
         onError: (error) => {
           console.error("Login failed:", error);
+           toast.error("Error login user please try again");
         },
       },
     });

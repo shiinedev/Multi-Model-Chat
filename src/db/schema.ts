@@ -5,11 +5,9 @@ import {
   boolean,
   jsonb,
   varchar,
-  uuid,
    check,
   index,
-  integer,
-  real
+  integer
 } from "drizzle-orm/pg-core";
 
 

@@ -24,7 +24,8 @@ import { signIn, signUp } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { user } from "@/db/schema";
+import { toast } from "sonner";
+
 
 const RegisterSchema = z.object({
   username: z.string().min(1, { message: "Username is required" }),
@@ -55,13 +56,16 @@ export function RegisterForm({
       password: data.password,
       fetchOptions: {
         onSuccess: () => {
+
           console.log("registration successful");
+           toast.success("registration  successfully");
+            reset();
           redirect("/login");
-          reset();
           // You can redirect the user or perform other actions here
         },
         onError: (error) => {
           console.error("Registration failed:", error);
+           toast.error("Registration Failed! please try again")
         },
       },
     });

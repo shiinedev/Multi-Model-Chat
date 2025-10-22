@@ -1,4 +1,4 @@
-import { Tool, tool, type InferToolInput, type InferToolOutput } from "ai";
+import { tool, type InferToolInput, type InferToolOutput } from "ai";
 import { z } from "zod";
 import Replicate from "replicate";
 
@@ -13,7 +13,7 @@ export const generateImage = tool({
   execute: async ({ prompt }) => {
     const input = { prompt, output_format: "jpg" };
     const output: any = await replicate.run("google/nano-banana", { input });
-    const url:string = output?.url()
+    const url:string = output?.url() as string;
     return url;
   },
 });
@@ -28,7 +28,7 @@ export const updateImage = tool({
   execute: async ({ prompt,images }) => {
     const input = { prompt,input:images, output_format: "jpg" };
     const output: any = await replicate.run("google/nano-banana", { input });
-    const url:string = output?.url();
+    const url:string = output?.url() as string;
 
     return url;
   },
