@@ -341,13 +341,13 @@ const Chat = ({ initialMessages }: ChatProps) => {
                   <PromptInputActionAddAttachments />
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
-              <PromptInputButton
+              {/* <PromptInputButton
                 variant={webSearch ? "default" : "ghost"}
                 onClick={() => setWebSearch(!webSearch)}>
                 <GlobeIcon size={16} className="text-foreground" />
                 <span className="text-foreground">Search</span>
-              </PromptInputButton>
-              <PromptInputModelSelect
+              </PromptInputButton> */}
+              {/* <PromptInputModelSelect
                 onValueChange={(value) => {
                   setModel(value);
                 }}
@@ -364,7 +364,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
                     </PromptInputModelSelectItem>
                   ))}
                 </PromptInputModelSelectContent>
-              </PromptInputModelSelect>
+              </PromptInputModelSelect> */}
             </PromptInputTools>
             <PromptInputSubmit disabled={!input.trim() && !status} status={status} />
           </PromptInputToolbar>

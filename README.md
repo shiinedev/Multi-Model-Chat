@@ -1,6 +1,7 @@
 # Multi-Model-Chat  
 > A multi-modal AI chatbot supporting text, files (PDF, images, docs) and tool-powered messages.
 
+![Web preview](./public/chatbot.PNG)
 ## 🧠 Overview  
 This project implements a full-stack chatbot application that handles **text messages**, **file uploads** (PDFs, images, docs), and integrates with tools and an AI backend. It supports storage of chat history, robust message schema validation, and a backend using Drizzle ORM + Neon (PostgreSQL) for persistence.
 
