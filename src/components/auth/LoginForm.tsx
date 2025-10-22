@@ -64,6 +64,7 @@ export function LoginForm({
       },
     });
   };
+  
   const handleLoginWithGoogle = async () => {
     await signIn.social({
       provider: "google",
