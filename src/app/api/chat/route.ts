@@ -44,7 +44,9 @@ export async function POST(req: Request) {
     );
   }
 
-  // validate messages if they contain tools, metadata, or data parts:
+ 
+  try {
+     // validate messages if they contain tools, metadata, or data parts:
   const validatedResult = await safeValidateUIMessages<MyUIMessage>({
     messages,
     tools,
@@ -191,4 +193,8 @@ You are now active and ready to assist.`,
   return createUIMessageStreamResponse({
     stream,
   });
+
+  } catch (error) {
+    return NextResponse.json({error: error instanceof Error ? error.message : "error chat creating chat"},{status:500})
+  }
 }
