@@ -200,7 +200,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
                           {part.mediaType.startsWith("image/") ? (
                             <Image
                               src={part.url}
-                              alt={part.filename!!}
+                              alt={part.filename ?? "generated image"}
                               width={200}
                               height={200}
                               className="rounded-md"
