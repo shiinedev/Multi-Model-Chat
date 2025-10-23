@@ -31,7 +31,7 @@ import { Action, Actions } from "@/components/ai-elements/actions";
 import { Fragment, startTransition, useEffect, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { Response } from "@/components/ai-elements/response";
-import { CopyIcon, File, GlobeIcon, RefreshCcwIcon } from "lucide-react";
+import { CopyIcon, DownloadIcon, File, GlobeIcon, LinkIcon, RefreshCcwIcon } from "lucide-react";
 import {
   Source,
   Sources,
@@ -49,6 +49,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useFocusWhenNoChatIdPresent } from "@/lib/useFocus";
 import { MyUIMessage } from "@/lib/chat";
 import { Skeleton } from "./ui/skeleton";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { toast } from "sonner";
 
 const models = [
   {
@@ -70,9 +73,13 @@ const Chat = ({ initialMessages }: ChatProps) => {
   const [model, setModel] = useState<string>(models[0].value);
   const [webSearch, setWebSearch] = useState(false);
   const [backupChatId, setBackupChatId] = useState(crypto.randomUUID());
+   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const searchParams = useSearchParams();
   const router = useRouter();
   const chatIdFromSearchParams = searchParams.get("chatId");
+
+
 
   const chatIdInUse = chatIdFromSearchParams || backupChatId;
 
@@ -92,12 +99,42 @@ const Chat = ({ initialMessages }: ChatProps) => {
     generateId: () => crypto.randomUUID(),
   });
 
-  console.log("backup id", backupChatId);
-  console.log("id with search params", chatIdInUse);
+   const handleImageClick = (imageUrl: string) => {
+    setPreviewImage(imageUrl)
+    setPreviewOpen(true)
+  }
+   const handleDownloadImage = async () => {
+    if (!previewImage) return
 
-  useEffect(() => {
-    setBackupChatId(crypto.randomUUID());
-  }, []);
+    try {
+      const response = await fetch(previewImage)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `generated-image-${Date.now()}.png`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success("The image has been saved to your device.")
+    } catch (error) {
+      toast.error("Failed to download the image. Please try again.")
+    }
+  }
+
+  const handleCopyLink = async () => {
+    if (!previewImage) return
+
+    try {
+      await navigator.clipboard.writeText(previewImage)
+      toast.success("Image link has been copied to clipboard.")
+    } catch (error) {
+      toast.error("Failed to copy link. Please try again.")
+    }
+  }
+
 
   const ref = useFocusWhenNoChatIdPresent(chatIdFromSearchParams);
 
@@ -242,7 +279,8 @@ const Chat = ({ initialMessages }: ChatProps) => {
                               alt={`generated_image-${i}`}
                               width={200}
                               height={200}
-                              className="rounded-md"
+                              className="rounded-md cursor-pointer"
+                               onClick={() => handleImageClick(image)}
                             />
                           )}
                         </Message>
@@ -261,7 +299,8 @@ const Chat = ({ initialMessages }: ChatProps) => {
                               alt={`generated_image-${i}`}
                               width={200}
                               height={200}
-                              className="rounded-md"
+                              className="rounded-md cursor-pointer"
+                              onClick={() => handleImageClick(image)}
                             />
                           )}
                         </Message>
@@ -284,6 +323,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
                               width={200}
                               height={200}
                               className="rounded-md"
+                              onClick={() => handleImageClick(image)}
                             />
                           )}
                         </Message>
@@ -369,7 +409,37 @@ const Chat = ({ initialMessages }: ChatProps) => {
             <PromptInputSubmit disabled={!input.trim() && !status} status={status} />
           </PromptInputToolbar>
         </PromptInput>
+         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Image Preview</DialogTitle>
+            <DialogDescription>Preview and download the generated image.</DialogDescription>
+          </DialogHeader>
+          {previewImage && (
+            <div className="flex items-center justify-center">
+              <Image
+                src={previewImage || "/placeholder.svg"}
+                alt="preview image"
+                width={300}
+                height={300}
+                className="rounded-md"
+              />
+            </div>
+          )}
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" onClick={handleDownloadImage}>
+              <DownloadIcon className="mr-2 h-4 w-4" />
+              Download
+            </Button>
+            <Button variant="outline" onClick={handleCopyLink}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
+
     </div>
   );
 };
