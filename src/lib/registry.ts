@@ -6,3 +6,6 @@ export const registry = createProviderRegistry({
   openai,
   google,
 });
+
+
+const model = registry.languageModel("openai:gpt-4.1-nano")

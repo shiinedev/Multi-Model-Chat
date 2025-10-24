@@ -55,13 +55,42 @@ import { toast } from "sonner";
 
 const models = [
   {
+    name: "Gemini 2.5-flash",
+    value: "google:gemini-2.5-flash",
+  },
+   {
+    name: "Gemini 2.5-flash",
+    value: "google:gemini-1.5-flash",
+  },
+  {
+    name: "Gemini 1.5-pro",
+    value: "google:gemini-1.5-pro",
+  },
+  {
+    name: "Gemini 2.0-flash",
+    value: "google:gemini-2.0-flash",
+  },
+  {
     name: "GPT 4o",
     value: "openai:gpt-4o",
   },
   {
-    name: "Gemini 2.5-flash",
-    value: "google:gemini-2.5-flash",
+    name: "GPT 4o-latest",
+    value: "openai:chatgpt-4o-latest",
   },
+  {
+    name: "GPT 4",
+    value: "openai:gpt-4",
+  },
+  {
+    name: "GPT 4o-mini",
+    value: "openai:gpt-4o-mini",
+  },
+  {
+    name: "GPT 4.1-nano",
+    value: "openai:gpt-4.1-nano",
+  },
+
 ];
 
 interface ChatProps {

@@ -6,6 +6,7 @@ import {
   UIMessage,
   createUIMessageStreamResponse,
   createUIMessageStream,
+  AISDKError,
 } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
@@ -196,6 +197,6 @@ You are now active and ready to assist.`,
   });
 
   } catch (error) {
-    return NextResponse.json({error: error instanceof Error ? error.message : "error chat creating chat"},{status:500})
+    return NextResponse.json({error: error instanceof AISDKError ? error.message : "error chat creating chat"},{status:500});
   }
 }
