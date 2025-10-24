@@ -16,6 +16,7 @@ import { tools } from "@/tools/tools";
 import { saveMessage } from "@/lib/chat/messages";
 import { generateTitleForChat } from "./generateTitle";
 import { NextResponse } from "next/server";
+import { registry } from "@/lib/registry";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -28,8 +29,8 @@ export async function POST(req: Request) {
     id: chatId,
   }: {
     messages: UIMessage[];
-    model: string;
     webSearch: boolean;
+    model:any
     id: string;
   } = await req.json();
 
@@ -109,7 +110,7 @@ export async function POST(req: Request) {
       }
 
       const result = streamText({
-        model: google("gemini-2.0-flash"),
+        model: registry.languageModel(model),
         messages: convertToModelMessages(messages),
         system: `You are a NextGpt, a large multimodal language model built to assist with a wide range of tasks.
 

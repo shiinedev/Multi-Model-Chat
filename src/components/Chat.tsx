@@ -56,11 +56,11 @@ import { toast } from "sonner";
 const models = [
   {
     name: "GPT 4o",
-    value: "openai/gpt-4o",
+    value: "openai:gpt-4o",
   },
   {
-    name: "Deepseek R1",
-    value: "deepseek/deepseek-r1",
+    name: "Gemini 2.5-flash",
+    value: "google:gemini-2.5-flash",
   },
 ];
 
@@ -70,7 +70,7 @@ interface ChatProps {
 
 const Chat = ({ initialMessages }: ChatProps) => {
   const [input, setInput] = useState("");
-  const [model, setModel] = useState<string>(models[0].value);
+  const [model, setModel] = useState(models[0].value);
   const [webSearch, setWebSearch] = useState(false);
   const [backupChatId, setBackupChatId] = useState(crypto.randomUUID());
    const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -387,7 +387,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
                 <GlobeIcon size={16} className="text-foreground" />
                 <span className="text-foreground">Search</span>
               </PromptInputButton> */}
-              {/* <PromptInputModelSelect
+              <PromptInputModelSelect
                 onValueChange={(value) => {
                   setModel(value);
                 }}
@@ -404,7 +404,7 @@ const Chat = ({ initialMessages }: ChatProps) => {
                     </PromptInputModelSelectItem>
                   ))}
                 </PromptInputModelSelectContent>
-              </PromptInputModelSelect> */}
+              </PromptInputModelSelect>
             </PromptInputTools>
             <PromptInputSubmit disabled={!input.trim() && !status} status={status} />
           </PromptInputToolbar>
